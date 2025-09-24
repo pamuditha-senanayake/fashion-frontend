@@ -37,6 +37,11 @@ const GlobalStyles = createGlobalStyle`
     font-family: 'Orbitron', sans-serif;
     margin-bottom: 0.5em;
   }
+    /* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
 `;
 
 export default GlobalStyles;

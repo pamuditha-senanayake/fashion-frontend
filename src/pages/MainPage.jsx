@@ -119,8 +119,9 @@ function MainPage() {
   setAiResponse("");
 
   const evtSource = new EventSource(
-    `http://localhost:8000/search?query=${encodeURIComponent(query)}`
-  );
+  `https://fashion-backend-j02w.onrender.com/search?query=${encodeURIComponent(query)}`
+);
+
 
   evtSource.onmessage = (e) => {
     try {

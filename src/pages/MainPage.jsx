@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import AISearchBar from "../components/AISearchBar";
 import AnimatedBackground from "../components/AnimatedBackground";
+import TrendDetails from "../components/TrendDetails";
 import axios from "axios";
 
 // Navbar & Section components
@@ -21,7 +22,13 @@ const Section = styled.section`
 const SectionContent = styled.div`
   position: relative;
   z-index: 10;
+  max-width: ${(props) => (props.fullWidth ? "100%" : "800px")};
+  width: 100%;
+  margin: 0 auto;
+  padding: ${(props) => (props.fullWidth ? "0 20px" : "0")};
+  text-align: center;
 `;
+
 
 const Title = styled.h1`
   font-size: 4rem;
@@ -149,11 +156,46 @@ const TrendCard = styled.div`
   justify-content: space-between;
 `;
 
+const FeatureContent = styled(SectionContent)`
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px; /* optional padding */
+  text-align: center;
+`;
+
+
 // FashionFeed Component
-const FashionFeed = () => {
+const FashionFeed = ({ posts }) => {
+  if (!posts.length) return <p>No trends available</p>;
+
+  return (
+    <TrendsGrid>
+      {posts.map((post) => (
+        <TrendCard key={post.id}>
+          <div>
+            <h3 style={{ marginBottom: "4px" }}>{post.trend_name || "No Trend Name"}</h3>
+            <p style={{ fontSize: "0.9rem", marginBottom: "8px" }}>{post.content || ""}</p>
+            <div style={{ fontSize: "0.8rem", color: "#666" }}>
+              {(post.hashtags || []).map((tag) => `#${tag} `)}
+            </div>
+          </div>
+          <div style={{ textAlign: "right", fontWeight: "600", color: "#5a3e2b" }}>
+            Trend Score: {Number(post.predicted_trend_score || 0).toFixed(2)}
+          </div>
+        </TrendCard>
+      ))}
+    </TrendsGrid>
+  );
+};
+
+// MainPage Component
+function MainPage() {
+  const [aiResponse, setAiResponse] = useState("");
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch trends
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -171,33 +213,6 @@ const FashionFeed = () => {
     };
     fetchPosts();
   }, []);
-
-  if (loading) return <p>Loading fashion posts...</p>;
-  if (!posts.length) return <p>No trends available</p>;
-
-  return (
-    <TrendsGrid>
-      {posts.map((post) => (
-        <TrendCard key={post.id}>
-          <div>
-            <h3 style={{ marginBottom: "4px" }}>{post.trend_name || "No Trend Name"}</h3>
-            <p style={{ fontSize: "0.9rem", marginBottom: "8px" }}>{post.content || ""}</p>
-            <div style={{ fontSize: "0.8rem", color: "#666" }}>
-              {(post.hashtags || []).map((tag, idx) => `#${tag} `)}
-            </div>
-          </div>
-          <div style={{ textAlign: "right", fontWeight: "600", color: "#5a3e2b" }}>
-            Trend Score: {Number(post.predicted_trend_score || 0).toFixed(2)}
-          </div>
-        </TrendCard>
-      ))}
-    </TrendsGrid>
-  );
-};
-
-// MainPage
-function MainPage() {
-  const [aiResponse, setAiResponse] = useState("");
 
   const handleSearch = (query) => {
     setAiResponse("");
@@ -235,6 +250,7 @@ function MainPage() {
     <div id="main-page">
       <Navbar>
         <NavLink href="#home">Home</NavLink>
+          <NavLink href="#fashion">Fashion Items</NavLink>
         <NavLink href="#features">Features</NavLink>
         <NavLink href="#about">About</NavLink>
         <NavLink href="#contact">Contact</NavLink>
@@ -250,24 +266,36 @@ function MainPage() {
         </SectionContent>
       </Section>
 
-      <TrendsWrapper>
+      <TrendsWrapper id="fashion">
         <TrendsHeader>
           <Title>Latest Fashion Trends</Title>
           <Subtitle>
             Explore emerging trends from social media with predicted trend scores.
           </Subtitle>
         </TrendsHeader>
-        <FashionFeed />
+
+        {loading ? (
+          <p>Loading fashion posts...</p>
+        ) : posts.length ? (
+          <>
+            <FashionFeed posts={posts} />
+
+          </>
+        ) : (
+          <p>No trends available</p>
+        )}
       </TrendsWrapper>
 
-      <Section id="features" bg="#f0f4ff">
-        <SectionContent>
-          <Title>Features</Title>
-          <Subtitle>
-            Discover trend analysis, personalized recommendations, and social media insights powered by AI.
-          </Subtitle>
-        </SectionContent>
-      </Section>
+     <Section id="features" bg="#f0f4ff">
+  <SectionContent fullWidth>
+    <Title>Trend Insights</Title>
+    <Subtitle>
+      Explore detailed analytics of emerging fashion trends, including scores, forecasts, and directions.
+    </Subtitle>
+    <TrendDetails trends={posts} />
+  </SectionContent>
+</Section>
+
 
       <Section id="about" bg="#f7fff0">
         <SectionContent>

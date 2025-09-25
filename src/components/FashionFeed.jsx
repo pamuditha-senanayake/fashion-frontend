@@ -80,7 +80,6 @@ const FashionFeed = () => {
     const fetchPosts = async () => {
       try {
         const res = await axios.get("http://localhost:8000/predict_trends_full?limit=20");
-        console.log("API Response:", res.data); // check data structure
 
         const data = res.data.map((post, idx) => ({
           id: post.id || idx,

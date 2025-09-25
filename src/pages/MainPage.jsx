@@ -1,10 +1,8 @@
-// src/pages/MainPage.jsx
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import AISearchBar from "../components/AISearchBar";
-import AnimatedBackground from "../components/AnimatedBackground"; // optional
+import AnimatedBackground from "../components/AnimatedBackground";
 
-/* ---------- Styled Components ---------- */
 const Section = styled.section`
   min-height: 100vh;
   display: flex;
@@ -15,35 +13,36 @@ const Section = styled.section`
   text-align: center;
   position: relative;
   background: ${(props) => props.bg || "#f9f9f9"};
-  overflow: hidden; /* ensures blobs stay within this section */
+  overflow: hidden;
 `;
 
 const SectionContent = styled.div`
   position: relative;
-  z-index: 10; /* above the animated background */
+  z-index: 10;
 `;
 
 const Title = styled.h1`
   font-size: 4rem;
-  margin-bottom: 0px;
+  margin-bottom: 0;
   font-weight: 800;
-  font-family: 'Montserrat', sans-serif; /* title font */
+  font-family: 'Montserrat', sans-serif;
 `;
 
 const Subtitle = styled.p`
-  font-family: sans-serif; /* body font */
-  font-size: 1.0em;
+  font-family: sans-serif;
+  font-size: 1em;
   color: #ccc;
   max-width: 800px;
-  text-align: center; /* center-align all subtitles */
-  margin: 0 auto 7px auto; /* auto margin to center horizontally */
+  margin: 0 auto 7px auto;
+  text-align: center;
 
   @media (max-width: 768px) {
     font-size: 0.9em;
   }
 `;
+
 const GradientTitle = styled(Title)`
-  background: linear-gradient(90deg, #5a3e2b, #7d7d7d); /* bluish dark bronze → dark silver */
+  background: linear-gradient(90deg, #5a3e2b, #7d7d7d);
   font-size: 6rem;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -54,8 +53,20 @@ const GradientTitle = styled(Title)`
   }
 `;
 
+const DisplayBox = styled.div`
+  margin: 20px auto 0;
+  padding: 20px;
+  max-width: 800px;
+  background: #ffffffcc;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-family: sans-serif;
+  color: #333;
+  text-align: left;
+  white-space: pre-wrap;
+`;
 
-/* ---------- Styled Components ---------- */
 const Navbar = styled.nav`
   position: fixed;
   top: 20px;
@@ -64,8 +75,8 @@ const Navbar = styled.nav`
   display: flex;
   gap: 25px;
   padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.2); /* semi-transparent */
-  backdrop-filter: blur(10px); /* frosted glass effect */
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
   border-radius: 16px;
   z-index: 1000;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
@@ -75,14 +86,13 @@ const NavLink = styled.a`
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   color: #333;
-  text-decoration: none; /* remove underline */
+  text-decoration: none;
   position: relative;
   cursor: pointer;
   transition: all 0.3s ease;
 
   &:hover {
-    color: #5a3e2b; /* bronze-ish hover */
-    text-decoration: none; /* remove underline on hover */
+    color: #5a3e2b;
   }
 
   &:after {
@@ -98,40 +108,61 @@ const NavLink = styled.a`
   }
 
   &:hover:after {
-    width: 100%; /* animated bottom border on hover */
+    width: 100%;
   }
 `;
 
+function MainPage() {
+  const [aiResponse, setAiResponse] = useState("");
+
+  const handleSearch = (query) => {
+  setAiResponse("");
+
+  const evtSource = new EventSource(
+    `http://localhost:8000/search?query=${encodeURIComponent(query)}`
+  );
+
+  evtSource.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.delta) {
+        setAiResponse(prev => prev + data.delta);
+      } else if (data.status && data.status === "Done") {
+        evtSource.close();
+      } else if (data.status) {
+        setAiResponse(data.status);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  evtSource.onerror = () => {
+    setAiResponse("Error connecting to backend.");
+    evtSource.close();
+  };
+};
 
 
-
-/* ---------- MainPage Component ---------- */
-function MainPage({ onSearch }) {
   return (
     <div id="main-page">
-  {/* Floating Navigation Bar */}
-  <Navbar>
-    <NavLink href="#home">Home</NavLink>
-    <NavLink href="#features">Features</NavLink>
-    <NavLink href="#about">About</NavLink>
-    <NavLink href="#contact">Contact</NavLink>
-  </Navbar>
+      <Navbar>
+        <NavLink href="#home">Home</NavLink>
+        <NavLink href="#features">Features</NavLink>
+        <NavLink href="#about">About</NavLink>
+        <NavLink href="#contact">Contact</NavLink>
+      </Navbar>
 
-      {/* First Section with Animated Background */}
       <Section id="home" bg="#fff8f0">
-        <AnimatedBackground /> {/* confined to this section */}
+        <AnimatedBackground />
         <SectionContent>
-        <GradientTitle>Fashion Predictor</GradientTitle>
-          <Subtitle>
-            <center>
-             Type your query and discover emerging fashion trends
-             </center>
-          </Subtitle>
-          <AISearchBar onSearch={onSearch} />
+          <GradientTitle>Fashion Predictor</GradientTitle>
+          <Subtitle>Type your query and discover emerging fashion trends</Subtitle>
+          <AISearchBar onSearch={handleSearch} />
+          {aiResponse && <DisplayBox>{aiResponse}</DisplayBox>}
         </SectionContent>
       </Section>
 
-      {/* Other Sections */}
       <Section id="features" bg="#f0f4ff">
         <SectionContent>
           <Title>Features</Title>

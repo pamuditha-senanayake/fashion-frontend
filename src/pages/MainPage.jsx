@@ -5,8 +5,8 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import TrendDetails from "../components/TrendDetails";
 import axios from "axios";
 
-// const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
-const BACKEND_URL =  "http://localhost:8000";
+const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
+// const BACKEND_URL =  "http://localhost:8000";
 
 // Navbar & Section components
 const Section = styled.section`

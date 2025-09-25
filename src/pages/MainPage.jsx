@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import AISearchBar from "../components/AISearchBar";
 import AnimatedBackground from "../components/AnimatedBackground";
+import axios from "axios";
 
+// Navbar & Section components
 const Section = styled.section`
   min-height: 100vh;
   display: flex;
@@ -21,6 +23,7 @@ const SectionContent = styled.div`
   z-index: 10;
 `;
 
+// Titles & Subtitles
 const Title = styled.h1`
   font-size: 4rem;
   margin-bottom: 0;
@@ -33,7 +36,7 @@ const Subtitle = styled.p`
   font-size: 1em;
   color: #ccc;
   max-width: 800px;
-  margin: 0 auto 7px auto;
+  margin: 0 auto 20px auto;
   text-align: center;
 
   @media (max-width: 768px) {
@@ -112,37 +115,119 @@ const NavLink = styled.a`
   }
 `;
 
+// -----------------
+// Trends Section Grid
+// -----------------
+const TrendsWrapper = styled.div`
+  width: 100%;
+  padding: 60px 20px;
+  background: #fff8f8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const TrendsHeader = styled.div`
+  text-align: center;
+  margin-bottom: 40px;
+`;
+
+const TrendsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+`;
+
+const TrendCard = styled.div`
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: white;
+  height: 200px; /* fixed height */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+
+// -----------------
+// FashionFeed Component
+// -----------------
+const FashionFeed = () => {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await axios.get("http://localhost:8000/predict_trends?limit=20");
+        setPosts(res.data);
+      } catch (err) {
+        console.error("Error fetching fashion posts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
+
+  if (loading) return <p>Loading fashion posts...</p>;
+
+  return (
+    <TrendsGrid>
+      {posts.map((post) => (
+        <TrendCard key={post.id}>
+          <div>
+            <h3 style={{ marginBottom: "4px" }}>{post.trend_name || "No Trend Name"}</h3>
+            <p style={{ fontSize: "0.9rem", marginBottom: "8px" }}>{post.content}</p>
+            <div style={{ fontSize: "0.8rem", color: "#666" }}>
+              {post.hashtags.map((tag) => `#${tag} `)}
+            </div>
+          </div>
+          <div style={{ textAlign: "right", fontWeight: "600", color: "#5a3e2b" }}>
+            Trend Score: {post.predicted_trend_score?.toFixed(2)}
+          </div>
+        </TrendCard>
+      ))}
+    </TrendsGrid>
+  );
+};
+
+// -----------------
+// Main Page
+// -----------------
 function MainPage() {
   const [aiResponse, setAiResponse] = useState("");
 
   const handleSearch = (query) => {
-  setAiResponse("");
+    setAiResponse("");
 
-  const evtSource = new EventSource(
-    `http://localhost:8000/search?query=${encodeURIComponent(query)}`
-  );
+    const evtSource = new EventSource(
+      `http://localhost:8000/search?query=${encodeURIComponent(query)}`
+    );
 
-  evtSource.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      if (data.delta) {
-        setAiResponse(prev => prev + data.delta);
-      } else if (data.status && data.status === "Done") {
-        evtSource.close();
-      } else if (data.status) {
-        setAiResponse(data.status);
+    evtSource.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.delta) {
+          setAiResponse(prev => prev + data.delta);
+        } else if (data.status && data.status === "Done") {
+          evtSource.close();
+        } else if (data.status) {
+          setAiResponse(data.status);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    };
 
-  evtSource.onerror = () => {
-    setAiResponse("Error connecting to backend.");
-    evtSource.close();
+    evtSource.onerror = () => {
+      setAiResponse("Error connecting to backend.");
+      evtSource.close();
+    };
   };
-};
-
 
   return (
     <div id="main-page">
@@ -162,6 +247,20 @@ function MainPage() {
           {aiResponse && <DisplayBox>{aiResponse}</DisplayBox>}
         </SectionContent>
       </Section>
+
+      {/* -------------------- */}
+      {/* Trends Section */}
+      {/* -------------------- */}
+      <TrendsWrapper>
+        <TrendsHeader>
+          <Title>Latest Fashion Trends</Title>
+          <Subtitle>
+            Explore emerging trends from social media with predicted trend scores.
+          </Subtitle>
+        </TrendsHeader>
+
+        <FashionFeed />
+      </TrendsWrapper>
 
       <Section id="features" bg="#f0f4ff">
         <SectionContent>

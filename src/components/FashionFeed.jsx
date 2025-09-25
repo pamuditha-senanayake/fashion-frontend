@@ -2,30 +2,33 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import axios from "axios";
 
+// --- Styled Components ---
 const TrendsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 `;
 
 const TrendCard = styled.div`
   border: 1px solid #ddd;
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
   background: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 180px;
+  min-height: 250px;
 `;
 
 const TrendIcon = styled.span`
   margin-right: 6px;
-  color: ${(props) => (props.direction === "up" ? "green" : "red")};
+  color: ${(props) =>
+    props.direction === "up" ? "green" :
+    props.direction === "down" ? "red" : "gray"};
   font-weight: bold;
 `;
 
@@ -37,7 +40,7 @@ const FilterWrapper = styled.div`
 `;
 
 const FilterButton = styled.button`
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
@@ -52,6 +55,22 @@ const FilterButton = styled.button`
   }
 `;
 
+const ViewButton = styled.button`
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #5a3e2b;
+  color: #fff;
+  font-size: 0.85rem;
+  margin-top: 10px;
+
+  &:hover {
+    background: #422b1d;
+  }
+`;
+
+// --- Main Component ---
 const FashionFeed = () => {
   const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -60,16 +79,17 @@ const FashionFeed = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/predict_trends?limit=20");
+        const res = await axios.get("http://localhost:8000/predict_trends_full?limit=20");
+        console.log("API Response:", res.data); // check data structure
 
         const data = res.data.map((post, idx) => ({
           id: post.id || idx,
           trend_name: post.trend_name || `Trend ${idx + 1}`,
           content: post.content || "No description",
           hashtags: post.hashtags || ["fashion", "trend", "OOTD"],
-          predicted_trend_score: post.predicted_trend_score?.toFixed(2) || Math.random().toFixed(2),
-          trendDirection: post.trendDirection || (Math.random() > 0.5 ? "up" : "down"),
-          prediction: post.prediction || "Next week",
+          predicted_trend_score: Number(post.predicted_trend_score)?.toFixed(2) || Math.random().toFixed(2),
+          forecasted_trend_score: Number(post.forecasted_trend_score)?.toFixed(2) || Math.random().toFixed(2),
+          trendDirection: post.trendDirection || "stable",
         }));
 
         // Remove duplicates by trend_name
@@ -85,15 +105,19 @@ const FashionFeed = () => {
         setLoading(false);
       }
     };
+
     fetchPosts();
   }, []);
 
-  const filteredPosts =
-    filter === "all"
-      ? posts
-      : posts.filter((p) => p.trendDirection === filter);
+  const filteredPosts = filter === "all"
+    ? posts
+    : posts.filter((p) => p.trendDirection === filter);
 
   if (loading) return <p style={{ textAlign: "center" }}>Loading fashion posts...</p>;
+
+  const handleViewDetails = (post) => {
+    alert(JSON.stringify(post, null, 2));
+  };
 
   return (
     <div style={{ width: "100%", padding: "20px 0" }}>
@@ -107,6 +131,9 @@ const FashionFeed = () => {
         <FilterButton active={filter === "down"} onClick={() => setFilter("down")}>
           Downtrend ▼
         </FilterButton>
+        <FilterButton active={filter === "stable"} onClick={() => setFilter("stable")}>
+          Stable →
+        </FilterButton>
       </FilterWrapper>
 
       <TrendsGrid>
@@ -115,7 +142,11 @@ const FashionFeed = () => {
             <div>
               <h3 style={{ marginBottom: "4px" }}>
                 <TrendIcon direction={post.trendDirection}>
-                  {post.trendDirection === "up" ? "▲" : "▼"}
+                  {post.trendDirection === "up"
+                    ? "▲"
+                    : post.trendDirection === "down"
+                    ? "▼"
+                    : "→"}
                 </TrendIcon>
                 {post.trend_name}
               </h3>
@@ -125,20 +156,13 @@ const FashionFeed = () => {
                   <span key={i}>#{tag} </span>
                 ))}
               </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: "8px",
-              }}
-            >
-              <span style={{ fontWeight: "600", color: "#5a3e2b" }}>
-                Trend Score: {post.predicted_trend_score}
-              </span>
-              <span style={{ fontSize: "0.75rem", color: "#888" }}>
-                {post.prediction}
-              </span>
+              <div style={{ fontWeight: "600", color: "#5a3e2b", marginTop: "8px" }}>
+                Score: {post.predicted_trend_score} | Forecast: {post.forecasted_trend_score}
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "4px" }}>
+                Direction: {post.trendDirection === "up" ? "▲ Up" : post.trendDirection === "down" ? "▼ Down" : "→ Stable"}
+              </div>
+              <ViewButton onClick={() => handleViewDetails(post)}>View Details</ViewButton>
             </div>
           </TrendCard>
         ))}

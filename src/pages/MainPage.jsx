@@ -23,7 +23,6 @@ const SectionContent = styled.div`
   z-index: 10;
 `;
 
-// Titles & Subtitles
 const Title = styled.h1`
   font-size: 4rem;
   margin-bottom: 0;
@@ -115,9 +114,7 @@ const NavLink = styled.a`
   }
 `;
 
-// -----------------
 // Trends Section Grid
-// -----------------
 const TrendsWrapper = styled.div`
   width: 100%;
   padding: 60px 20px;
@@ -152,9 +149,7 @@ const TrendCard = styled.div`
   justify-content: space-between;
 `;
 
-// -----------------
 // FashionFeed Component
-// -----------------
 const FashionFeed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +158,11 @@ const FashionFeed = () => {
     const fetchPosts = async () => {
       try {
         const res = await axios.get("http://localhost:8000/predict_trends?limit=20");
-        setPosts(res.data);
+        if (Array.isArray(res.data)) {
+          setPosts(res.data);
+        } else {
+          console.error("Backend returned non-array:", res.data);
+        }
       } catch (err) {
         console.error("Error fetching fashion posts:", err);
       } finally {
@@ -174,6 +173,7 @@ const FashionFeed = () => {
   }, []);
 
   if (loading) return <p>Loading fashion posts...</p>;
+  if (!posts.length) return <p>No trends available</p>;
 
   return (
     <TrendsGrid>
@@ -181,13 +181,13 @@ const FashionFeed = () => {
         <TrendCard key={post.id}>
           <div>
             <h3 style={{ marginBottom: "4px" }}>{post.trend_name || "No Trend Name"}</h3>
-            <p style={{ fontSize: "0.9rem", marginBottom: "8px" }}>{post.content}</p>
+            <p style={{ fontSize: "0.9rem", marginBottom: "8px" }}>{post.content || ""}</p>
             <div style={{ fontSize: "0.8rem", color: "#666" }}>
-              {post.hashtags.map((tag) => `#${tag} `)}
+              {(post.hashtags || []).map((tag, idx) => `#${tag} `)}
             </div>
           </div>
           <div style={{ textAlign: "right", fontWeight: "600", color: "#5a3e2b" }}>
-            Trend Score: {post.predicted_trend_score?.toFixed(2)}
+            Trend Score: {Number(post.predicted_trend_score || 0).toFixed(2)}
           </div>
         </TrendCard>
       ))}
@@ -195,38 +195,40 @@ const FashionFeed = () => {
   );
 };
 
-// -----------------
-// Main Page
-// -----------------
+// MainPage
 function MainPage() {
   const [aiResponse, setAiResponse] = useState("");
 
   const handleSearch = (query) => {
     setAiResponse("");
+    try {
+      const evtSource = new EventSource(
+        `http://localhost:8000/search?query=${encodeURIComponent(query)}`
+      );
 
-    const evtSource = new EventSource(
-      `http://localhost:8000/search?query=${encodeURIComponent(query)}`
-    );
-
-    evtSource.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.delta) {
-          setAiResponse(prev => prev + data.delta);
-        } else if (data.status && data.status === "Done") {
-          evtSource.close();
-        } else if (data.status) {
-          setAiResponse(data.status);
+      evtSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.delta) {
+            setAiResponse((prev) => prev + data.delta);
+          } else if (data.status === "Done") {
+            evtSource.close();
+          } else if (data.status) {
+            setAiResponse(data.status);
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
-      }
-    };
+      };
 
-    evtSource.onerror = () => {
-      setAiResponse("Error connecting to backend.");
-      evtSource.close();
-    };
+      evtSource.onerror = () => {
+        setAiResponse("Error connecting to backend.");
+        evtSource.close();
+      };
+    } catch (err) {
+      console.error("SSE error:", err);
+      setAiResponse("Error starting search.");
+    }
   };
 
   return (
@@ -248,9 +250,6 @@ function MainPage() {
         </SectionContent>
       </Section>
 
-      {/* -------------------- */}
-      {/* Trends Section */}
-      {/* -------------------- */}
       <TrendsWrapper>
         <TrendsHeader>
           <Title>Latest Fashion Trends</Title>
@@ -258,7 +257,6 @@ function MainPage() {
             Explore emerging trends from social media with predicted trend scores.
           </Subtitle>
         </TrendsHeader>
-
         <FashionFeed />
       </TrendsWrapper>
 

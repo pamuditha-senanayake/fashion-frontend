@@ -199,7 +199,7 @@ function MainPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/predict_trends?limit=20");
+        const res = await axios.get("https://fashion-backend-j02w.onrender.com/predict_trends?limit=20");
         if (Array.isArray(res.data)) {
           setPosts(res.data);
         } else {
@@ -218,7 +218,7 @@ function MainPage() {
     setAiResponse("");
     try {
       const evtSource = new EventSource(
-        `http://localhost:8000/search?query=${encodeURIComponent(query)}`
+        `https://fashion-backend-j02w.onrender.com/search?query=${encodeURIComponent(query)}`
       );
 
       evtSource.onmessage = (e) => {

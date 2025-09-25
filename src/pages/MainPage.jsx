@@ -251,7 +251,7 @@ function MainPage() {
       <Navbar>
         <NavLink href="#home">Home</NavLink>
           <NavLink href="#fashion">Fashion Items</NavLink>
-        <NavLink href="#features">Features</NavLink>
+        <NavLink href="#features">Insights</NavLink>
         <NavLink href="#about">About</NavLink>
         <NavLink href="#contact">Contact</NavLink>
       </Navbar>

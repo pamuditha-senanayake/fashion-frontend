@@ -10,7 +10,7 @@ import axios from "axios";
 // const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
 const BACKEND_URL = "http://localhost:8000";
 
-// Navbar & Section components
+// Styled components (unchanged)
 const Section = styled.section`
   min-height: 100vh;
   display: flex;
@@ -125,7 +125,6 @@ const NavLink = styled.a`
   }
 `;
 
-// Trends Section Grid
 const TrendsWrapper = styled.div`
   width: 100%;
   padding: 60px 20px;
@@ -168,7 +167,6 @@ const FeatureContent = styled(SectionContent)`
   text-align: center;
 `;
 
-// FashionFeed Component
 const FashionFeed = ({ posts }) => {
   if (!posts.length) return <p>No trends available</p>;
 
@@ -192,34 +190,72 @@ const FashionFeed = ({ posts }) => {
   );
 };
 
-// MainPage Component
+// ===== Button Styling =====
+const modernButtonStyle = {
+  marginBottom: "20px",
+  padding: "12px 28px",
+  borderRadius: "12px",
+  cursor: "pointer",
+  border: "2px solid #111",
+  background: "#fff",
+  color: "#111",
+  fontFamily: "'Montserrat', sans-serif",
+  fontWeight: "600",
+  fontSize: "1rem",
+  transition: "all 0.3s ease",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+};
+
+const onButtonHover = (e) => {
+  e.currentTarget.style.background = "#111";
+  e.currentTarget.style.color = "#fff";
+  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.15)";
+};
+
+const onButtonLeave = (e) => {
+  e.currentTarget.style.background = "#fff";
+  e.currentTarget.style.color = "#111";
+  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+};
+
+// ===== MainPage Component =====
 function MainPage() {
   const [aiResponse, setAiResponse] = useState("");
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [aiAudit, setAiAudit] = useState([]); // New state for AI audit
+  const [aiAudit, setAiAudit] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
 
-  // Fetch both trend posts and AI audits
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        // 1️⃣ Fetch normal trend data
         const resTrends = await axios.get(`${BACKEND_URL}/predict_trends_full?limit=20`);
         if (Array.isArray(resTrends.data)) setPosts(resTrends.data);
-
-        // 2️⃣ Fetch Responsible AI audit data
-        const resAudit = await axios.get(`${BACKEND_URL}/trends_with_audit?limit=20`);
-        if (Array.isArray(resAudit.data)) setAiAudit(resAudit.data);
-
       } catch (err) {
-        console.error("Error fetching trends or audit:", err);
+        console.error("Error fetching trends:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPosts();
   }, []);
+
+  const fetchAiAudit = async () => {
+    if (!posts || posts.length === 0) {
+      alert("No trend data to audit yet.");
+      return;
+    }
+
+    try {
+      setAuditLoading(true);
+      const resAudit = await axios.post(`${BACKEND_URL}/audit_trends`, { trends: posts });
+      if (Array.isArray(resAudit.data)) setAiAudit(resAudit.data);
+    } catch (err) {
+      console.error("Error running AI audit:", err);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
 
   const handleSearch = (query) => {
     setAiResponse("");
@@ -231,13 +267,9 @@ function MainPage() {
       evtSource.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
-          if (data.delta) {
-            setAiResponse((prev) => prev + data.delta);
-          } else if (data.status === "Done") {
-            evtSource.close();
-          } else if (data.status) {
-            setAiResponse(data.status);
-          }
+          if (data.delta) setAiResponse((prev) => prev + data.delta);
+          else if (data.status === "Done") evtSource.close();
+          else if (data.status) setAiResponse(data.status);
         } catch (err) {
           console.error(err);
         }
@@ -304,10 +336,20 @@ function MainPage() {
         <SectionContent>
           <Title>Audit</Title>
           <Subtitle>
-            We’re building the future of fashion prediction with cutting-edge technology and creativity.
+            Click below to run Responsible AI auditing on the current trend data.
           </Subtitle>
 
-          {/* Responsible AI Panel */}
+          {/* Modern button applied */}
+          <button
+            onClick={fetchAiAudit}
+            disabled={auditLoading}
+            style={modernButtonStyle}
+            onMouseEnter={onButtonHover}
+            onMouseLeave={onButtonLeave}
+          >
+            {auditLoading ? "Running Audit..." : "Run Responsible AI Audit"}
+          </button>
+
           {aiAudit.length > 0 ? (
             <ResponsibleAIPanel trends={aiAudit} />
           ) : (
@@ -316,9 +358,7 @@ function MainPage() {
         </SectionContent>
       </Section>
 
-      {/* Gallery Section */}
       <Gallery />
-
     </div>
   );
 }

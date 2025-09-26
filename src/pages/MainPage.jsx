@@ -6,6 +6,8 @@ import TrendDetails from "../components/TrendDetails";
 import ResponsibleAIPanel from "../components/ResponsibleAIPanel.jsx";
 import Gallery from "../components/Gallery";
 import AboutUs from "../components/AboutUs.jsx";
+import About from "../components/About.jsx";
+
 
 import axios from "axios";
 
@@ -294,6 +296,8 @@ function MainPage() {
         <NavLink href="#fashion">Fashion Items</NavLink>
         <NavLink href="#features">Insights</NavLink>
         <NavLink href="#audit">Audit</NavLink>
+        <NavLink href="#details">Details</NavLink>
+          <NavLink href="#team">Team</NavLink>
         <NavLink href="#gallery">Gallery</NavLink>
       </Navbar>
 
@@ -358,8 +362,11 @@ function MainPage() {
             <p>No AI audit report available</p>
           )}
         </SectionContent>
+
+
+
       </Section>
-         <Section id="about" bg="#f0f4ff">
+         <Section id="details" bg="#f0f4ff">
         <SectionContent fullWidth>
           <Title>About Us</Title>
           <Subtitle>
@@ -372,6 +379,18 @@ function MainPage() {
           <AboutUs />
         </SectionContent>
       </Section>
+
+             <Section id="team" bg="#f0f4ff">
+  <SectionContent fullWidth>
+    <Title>About Us</Title>
+    <Subtitle>
+      <strong>Team</strong>
+    </Subtitle>
+    <About />
+  </SectionContent>
+</Section>
+
+
 
       <Gallery />
 

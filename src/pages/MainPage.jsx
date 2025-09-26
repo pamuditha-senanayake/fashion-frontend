@@ -3,6 +3,7 @@ import styled from "styled-components";
 import AISearchBar from "../components/AISearchBar";
 import AnimatedBackground from "../components/AnimatedBackground";
 import TrendDetails from "../components/TrendDetails";
+import About from "../components/About";
 import axios from "axios";
 
 const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
@@ -25,13 +26,12 @@ const Section = styled.section`
 const SectionContent = styled.div`
   position: relative;
   z-index: 10;
-  max-width: ${(props) => (props.fullWidth ? "100%" : "800px")};
+  max-width: ${(props) => (props.fullWidth ? "100%" : "1300px")};
   width: 100%;
   margin: 0 auto;
   padding: ${(props) => (props.fullWidth ? "0 20px" : "0")};
   text-align: center;
 `;
-
 
 const Title = styled.h1`
   font-size: 4rem;
@@ -167,7 +167,6 @@ const FeatureContent = styled(SectionContent)`
   text-align: center;
 `;
 
-
 // FashionFeed Component
 const FashionFeed = ({ posts }) => {
   if (!posts.length) return <p>No trends available</p>;
@@ -221,7 +220,7 @@ function MainPage() {
     setAiResponse("");
     try {
       const evtSource = new EventSource(
-         `${BACKEND_URL}/search?query=${encodeURIComponent(query)}`
+        `${BACKEND_URL}/search?query=${encodeURIComponent(query)}`
       );
 
       evtSource.onmessage = (e) => {
@@ -253,7 +252,7 @@ function MainPage() {
     <div id="main-page">
       <Navbar>
         <NavLink href="#home">Home</NavLink>
-          <NavLink href="#fashion">Fashion Items</NavLink>
+        <NavLink href="#fashion">Fashion Items</NavLink>
         <NavLink href="#features">Insights</NavLink>
         <NavLink href="#about">About</NavLink>
         <NavLink href="#contact">Contact</NavLink>
@@ -282,30 +281,29 @@ function MainPage() {
         ) : posts.length ? (
           <>
             <FashionFeed posts={posts} />
-
           </>
         ) : (
           <p>No trends available</p>
         )}
       </TrendsWrapper>
 
-     <Section id="features" bg="#f0f4ff">
-  <SectionContent fullWidth>
-    <Title>Trend Insights</Title>
-    <Subtitle>
-      Explore detailed analytics of emerging fashion trends, including scores, forecasts, and directions.
-    </Subtitle>
-    <TrendDetails trends={posts} />
-  </SectionContent>
-</Section>
-
+      <Section id="features" bg="#f0f4ff">
+        <SectionContent fullWidth>
+          <Title>Trend Insights</Title>
+          <Subtitle>
+            Explore detailed analytics of emerging fashion trends, including scores, forecasts, and directions.
+          </Subtitle>
+          <TrendDetails trends={posts} />
+        </SectionContent>
+      </Section>
 
       <Section id="about" bg="#f7fff0">
         <SectionContent>
-          <Title>About Us</Title>
+          <Title>Meet The Team</Title>
           <Subtitle>
-            We’re building the future of fashion prediction with cutting-edge technology and creativity.
+            We're building the future of fashion prediction with cutting-edge technology and creativity.
           </Subtitle>
+          <About />
         </SectionContent>
       </Section>
 

@@ -28,7 +28,7 @@ const ResponsibleAIAudit = ({ trends }) => {
 
   return (
     <div style={containerStyle}>
-      <h2 style={headingStyle}>Responsible AI Audit</h2>
+
       {trends.map((item, idx) => {
         const points = item.ai_audit_notes?.split(";").map((p) => p.trim()) || [];
         return points.map((point, i) => (

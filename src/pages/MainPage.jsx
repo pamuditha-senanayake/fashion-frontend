@@ -5,6 +5,7 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import TrendDetails from "../components/TrendDetails";
 import ResponsibleAIPanel from "../components/ResponsibleAIPanel.jsx";
 import Gallery from "../components/Gallery";
+import AboutUs from "../components/AboutUs.jsx";
 import axios from "axios";
 
 // const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
@@ -44,7 +45,7 @@ const Title = styled.h1`
 const Subtitle = styled.p`
   font-family: sans-serif;
   font-size: 1em;
-  color: #ccc;
+  color: #3e3e3eff;
   max-width: 800px;
   margin: 0 auto 20px auto;
   text-align: center;
@@ -293,6 +294,7 @@ function MainPage() {
         <NavLink href="#features">Insights</NavLink>
         <NavLink href="#audit">Audit</NavLink>
         <NavLink href="#gallery">Gallery</NavLink>
+        <NavLink href="#about">About Us</NavLink>
       </Navbar>
 
       <Section id="home" bg="#fff8f0">
@@ -359,6 +361,20 @@ function MainPage() {
       </Section>
 
       <Gallery />
+
+      <Section id="about" bg="#f0f4ff">
+        <SectionContent fullWidth>
+          <Title>About Us</Title>
+          <Subtitle>
+            <strong>Fashion Trend Predictor</strong> is an AI-driven web application that helps
+            businesses in the fashion industry stay ahead of rapidly changing style trends.
+            By analyzing social media, e-commerce platforms, and influencer activity, our
+            system provides reliable forecasts that support data-driven design, marketing,
+            and stocking decisions.
+          </Subtitle>
+          <AboutUs />
+        </SectionContent>
+      </Section>
     </div>
   );
 }

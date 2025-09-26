@@ -85,7 +85,9 @@ const TrendDetails = ({ trends }) => {
               <td>{t.trend_name}</td>
               <td>{t.predicted_trend_score.toFixed(3)}</td>
               <td>{t.forecasted_trend_score.toFixed(3)}</td>
-              <td>{t.trend_direction}</td>
+              <td>{t.trendDirection}</td>
+
+
             </tr>
           ))}
         </tbody>

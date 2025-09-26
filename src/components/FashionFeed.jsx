@@ -88,7 +88,7 @@ const FashionFeed = () => {
           hashtags: post.hashtags || ["fashion", "trend", "OOTD"],
           predicted_trend_score: Number(post.predicted_trend_score)?.toFixed(2) || Math.random().toFixed(2),
           forecasted_trend_score: Number(post.forecasted_trend_score)?.toFixed(2) || Math.random().toFixed(2),
-          trendDirection: post.trendDirection || "stable",
+          trendDirection: post.trendDirection || "stable2",
         }));
 
         // Remove duplicates by trend_name

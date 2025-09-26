@@ -3,10 +3,11 @@ import styled from "styled-components";
 import AISearchBar from "../components/AISearchBar";
 import AnimatedBackground from "../components/AnimatedBackground";
 import TrendDetails from "../components/TrendDetails";
+import ResponsibleAIPanel from "../components/ResponsibleAIPanel.jsx";
 import axios from "axios";
 
-const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
-// const BACKEND_URL =  "http://localhost:8000";
+// const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
+const BACKEND_URL = "http://localhost:8000";
 
 // Navbar & Section components
 const Section = styled.section`
@@ -31,7 +32,6 @@ const SectionContent = styled.div`
   padding: ${(props) => (props.fullWidth ? "0 20px" : "0")};
   text-align: center;
 `;
-
 
 const Title = styled.h1`
   font-size: 4rem;
@@ -153,7 +153,7 @@ const TrendCard = styled.div`
   padding: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   background: white;
-  height: 200px; /* fixed height */
+  height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -163,10 +163,9 @@ const FeatureContent = styled(SectionContent)`
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
-  padding: 0 20px; /* optional padding */
+  padding: 0 20px;
   text-align: center;
 `;
-
 
 // FashionFeed Component
 const FashionFeed = ({ posts }) => {
@@ -197,23 +196,27 @@ function MainPage() {
   const [aiResponse, setAiResponse] = useState("");
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [aiAudit, setAiAudit] = useState([]); // New state for AI audit
 
-  // Fetch trends
+  // Fetch both trend posts and AI audits
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await axios.get(`${BACKEND_URL}/predict_trends?limit=20`);
-        if (Array.isArray(res.data)) {
-          setPosts(res.data);
-        } else {
-          console.error("Backend returned non-array:", res.data);
-        }
+        // 1️⃣ Fetch normal trend data
+        const resTrends = await axios.get(`${BACKEND_URL}/predict_trends_full?limit=20`);
+        if (Array.isArray(resTrends.data)) setPosts(resTrends.data);
+
+        // 2️⃣ Fetch Responsible AI audit data
+        const resAudit = await axios.get(`${BACKEND_URL}/trends_with_audit?limit=20`);
+        if (Array.isArray(resAudit.data)) setAiAudit(resAudit.data);
+
       } catch (err) {
-        console.error("Error fetching fashion posts:", err);
+        console.error("Error fetching trends or audit:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchPosts();
   }, []);
 
@@ -221,7 +224,7 @@ function MainPage() {
     setAiResponse("");
     try {
       const evtSource = new EventSource(
-         `${BACKEND_URL}/search?query=${encodeURIComponent(query)}`
+        `${BACKEND_URL}/search?query=${encodeURIComponent(query)}`
       );
 
       evtSource.onmessage = (e) => {
@@ -253,10 +256,10 @@ function MainPage() {
     <div id="main-page">
       <Navbar>
         <NavLink href="#home">Home</NavLink>
-          <NavLink href="#fashion">Fashion Items</NavLink>
+        <NavLink href="#fashion">Fashion Items</NavLink>
         <NavLink href="#features">Insights</NavLink>
-        <NavLink href="#about">About</NavLink>
-        <NavLink href="#contact">Contact</NavLink>
+        <NavLink href="#audit">Audit</NavLink>
+        <NavLink href="#gallery">Contact</NavLink>
       </Navbar>
 
       <Section id="home" bg="#fff8f0">
@@ -280,40 +283,43 @@ function MainPage() {
         {loading ? (
           <p>Loading fashion posts...</p>
         ) : posts.length ? (
-          <>
-            <FashionFeed posts={posts} />
-
-          </>
+          <FashionFeed posts={posts} />
         ) : (
           <p>No trends available</p>
         )}
       </TrendsWrapper>
 
-     <Section id="features" bg="#f0f4ff">
-  <SectionContent fullWidth>
-    <Title>Trend Insights</Title>
-    <Subtitle>
-      Explore detailed analytics of emerging fashion trends, including scores, forecasts, and directions.
-    </Subtitle>
-    <TrendDetails trends={posts} />
-  </SectionContent>
-</Section>
-
-
-      <Section id="about" bg="#f7fff0">
-        <SectionContent>
-          <Title>About Us</Title>
+      <Section id="features" bg="#f0f4ff">
+        <SectionContent fullWidth>
+          <Title>Trend Insights</Title>
           <Subtitle>
-            We’re building the future of fashion prediction with cutting-edge technology and creativity.
+            Explore detailed analytics of emerging fashion trends, including scores, forecasts, and directions.
           </Subtitle>
+          <TrendDetails trends={posts} />
         </SectionContent>
       </Section>
 
-      <Section id="contact" bg="#fff0f5">
+      <Section id="audit" bg="#f7fff0">
         <SectionContent>
-          <Title>Contact</Title>
+          <Title>Audit</Title>
           <Subtitle>
-            Reach out for collaborations, inquiries, or just to say hi!
+            We’re building the future of fashion prediction with cutting-edge technology and creativity.
+          </Subtitle>
+
+          {/* Responsible AI Panel - now uses aiAudit state */}
+          {aiAudit.length > 0 ? (
+            <ResponsibleAIPanel trends={aiAudit} />
+          ) : (
+            <p>No AI audit report available</p>
+          )}
+        </SectionContent>
+      </Section>
+
+      <Section id="gallery" bg="#fff0f5">
+        <SectionContent>
+          <Title>Gallery</Title>
+          <Subtitle>
+            Using Social Media Scanner!
           </Subtitle>
         </SectionContent>
       </Section>

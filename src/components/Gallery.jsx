@@ -38,43 +38,54 @@ const ImageCard = styled.div`
   }
 `;
 
+const RefreshButton = styled.button`
+  padding: 10px 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #ff69b4;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background-color: #ff85c1;
+  }
+`;
 
 export default function Gallery() {
   const [images, setImages] = useState([]);
-  const BACKEND_URL = "http://localhost:8000"; // Change to deployed URL
+  const BACKEND_URL = "http://localhost:8000";
+
+  const fetchImages = async (refresh = false) => {
+    console.log("[Gallery] Fetching images, refresh:", refresh);
+    try {
+      const res = await axios.get(
+        `${BACKEND_URL}/fetch_gallery?limit=20${refresh ? "&refresh=true" : ""}`
+      );
+
+      if (Array.isArray(res.data)) {
+        setImages(res.data);
+        console.log("[Gallery] Images set. Count:", res.data.length);
+      }
+    } catch (err) {
+      console.error("[Gallery] Error fetching gallery images:", err);
+    }
+  };
 
   useEffect(() => {
-    const fetchImages = async () => {
-      console.log("[Gallery] Starting fetch from:", `${BACKEND_URL}/fetch_gallery?limit=20`);
-      try {
-        const res = await axios.get(`${BACKEND_URL}/fetch_gallery?limit=20`);
-        console.log("[Gallery] Response status:", res.status);
-        console.log("[Gallery] Raw response data:", res.data);
-
-        if (Array.isArray(res.data)) {
-          setImages(res.data);
-          console.log("[Gallery] Images set successfully. Count:", res.data.length);
-        } else {
-          console.warn("[Gallery] Unexpected response format:", res.data);
-        }
-      } catch (err) {
-        console.error("[Gallery] Error fetching gallery images:", err);
-        if (err.response) {
-          console.error("[Gallery] Error details:", err.response.status, err.response.data);
-        }
-      }
-    };
-    fetchImages();
+    fetchImages(false); // Load local images first
   }, []);
 
   return (
     <GalleryWrapper id="gallery">
       <h1>Gallery</h1>
-      <p>Latest images from our Fashion Page</p>
+      <RefreshButton onClick={() => fetchImages(true)}>Refresh from FB</RefreshButton>
       <GalleryGrid>
         {images.map((img) => (
-          <ImageCard key={img.id} onClick={() => window.open(img.permalink, "_blank")}>
-            <img src={img.url} alt={img.message || "Fashion Image"} />
+          <ImageCard key={img.id} onClick={() => img.permalink !== "#" && window.open(img.permalink, "_blank")}>
+            <img src={`${BACKEND_URL}${img.url}`} alt={img.message || "Fashion Image"} />
           </ImageCard>
         ))}
       </GalleryGrid>

@@ -4,6 +4,7 @@ import AISearchBar from "../components/AISearchBar";
 import AnimatedBackground from "../components/AnimatedBackground";
 import TrendDetails from "../components/TrendDetails";
 import ResponsibleAIPanel from "../components/ResponsibleAIPanel.jsx";
+import Gallery from "../components/Gallery";
 import axios from "axios";
 
 // const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
@@ -259,7 +260,7 @@ function MainPage() {
         <NavLink href="#fashion">Fashion Items</NavLink>
         <NavLink href="#features">Insights</NavLink>
         <NavLink href="#audit">Audit</NavLink>
-        <NavLink href="#gallery">Contact</NavLink>
+        <NavLink href="#gallery">Gallery</NavLink>
       </Navbar>
 
       <Section id="home" bg="#fff8f0">
@@ -306,7 +307,7 @@ function MainPage() {
             We’re building the future of fashion prediction with cutting-edge technology and creativity.
           </Subtitle>
 
-          {/* Responsible AI Panel - now uses aiAudit state */}
+          {/* Responsible AI Panel */}
           {aiAudit.length > 0 ? (
             <ResponsibleAIPanel trends={aiAudit} />
           ) : (
@@ -315,14 +316,9 @@ function MainPage() {
         </SectionContent>
       </Section>
 
-      <Section id="gallery" bg="#fff0f5">
-        <SectionContent>
-          <Title>Gallery</Title>
-          <Subtitle>
-            Using Social Media Scanner!
-          </Subtitle>
-        </SectionContent>
-      </Section>
+      {/* Gallery Section */}
+      <Gallery />
+
     </div>
   );
 }

@@ -5,6 +5,7 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import TrendDetails from "../components/TrendDetails";
 import ResponsibleAIPanel from "../components/ResponsibleAIPanel.jsx";
 import Gallery from "../components/Gallery";
+import Contact from "../components/Contact";
 import axios from "axios";
 
 // const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
@@ -293,6 +294,7 @@ function MainPage() {
         <NavLink href="#features">Insights</NavLink>
         <NavLink href="#audit">Audit</NavLink>
         <NavLink href="#gallery">Gallery</NavLink>
+        <NavLink href="#contact">Contact Us</NavLink>
       </Navbar>
 
       <Section id="home" bg="#fff8f0">
@@ -359,6 +361,16 @@ function MainPage() {
       </Section>
 
       <Gallery />
+
+      <Section id="contact" bg="#f0f4ff">
+        <SectionContent fullWidth>
+          <Title>Contact Us</Title>
+          <Subtitle>
+            Reach out for tailored trend analytics, style forecasts, and emerging fashion directions.
+          </Subtitle>
+          <Contact />
+        </SectionContent>
+      </Section>
     </div>
   );
 }

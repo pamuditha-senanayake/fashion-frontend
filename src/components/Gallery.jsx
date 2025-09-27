@@ -10,14 +10,23 @@ const GalleryWrapper = styled.div`
 `;
 
 const GalleryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  display: flex;
   gap: 16px;
-  justify-items: center;
   margin-top: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+
+  /* Hide scrollbar (optional, can remove if you want it visible) */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
 `;
 
+
 const ImageCard = styled.div`
+  flex: 0 0 auto;
   width: 160px;
   height: 200px;
   border-radius: 12px;
@@ -25,7 +34,6 @@ const ImageCard = styled.div`
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform 0.2s ease;
-  margin: 0 auto;
 
   &:hover {
     transform: scale(1.05);
@@ -38,6 +46,7 @@ const ImageCard = styled.div`
     display: block;
   }
 `;
+
 
 // ===== Gallery Title =====
 const GalleryTitle = styled.h1`

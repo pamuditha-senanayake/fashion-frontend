@@ -85,11 +85,13 @@ const FashionFeed = () => {
           id: post.id || idx,
           trend_name: post.trend_name || `Trend ${idx + 1}`,
           content: post.content || "No description",
-          hashtags: post.hashtags || ["fashion", "trend", "OOTD"],
-          predicted_trend_score: Number(post.predicted_trend_score)?.toFixed(2) || Math.random().toFixed(2),
-          forecasted_trend_score: Number(post.forecasted_trend_score)?.toFixed(2) || Math.random().toFixed(2),
-          trendDirection: post.trendDirection || "stable2",
+          hashtags: Array.isArray(post.hashtags) ? post.hashtags : ["fashion", "trend", "OOTD"],
+          predicted_trend_score: Number(post.predicted_trend_score || Math.random()).toFixed(2),
+          forecasted_trend_score: Number(post.forecasted_trend_score || Math.random()).toFixed(2),
+          trendDirection: post.trendDirection ? String(post.trendDirection).toLowerCase() : "stable",
         }));
+        console.log("reached!")
+        console.log("Fetched data with directions:", data);
 
         // Remove duplicates by trend_name
         const uniquePosts = data.filter(
@@ -159,7 +161,11 @@ const FashionFeed = () => {
                 Score: {post.predicted_trend_score} | Forecast: {post.forecasted_trend_score}
               </div>
               <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "4px" }}>
-                Direction: {post.trendDirection === "up" ? "▲ Up" : post.trendDirection === "down" ? "▼ Down" : "→ Stable"}
+                Direction: {post.trendDirection === "up"
+                  ? "▲ Up"
+                  : post.trendDirection === "down"
+                  ? "▼ Down"
+                  : "→ Stable"}
               </div>
               <ViewButton onClick={() => handleViewDetails(post)}>View Details</ViewButton>
             </div>

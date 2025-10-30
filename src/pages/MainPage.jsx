@@ -184,10 +184,18 @@ const FashionFeed = ({ posts }) => {
             <div style={{ fontSize: "0.8rem", color: "#666" }}>
               {(post.hashtags || []).map((tag) => `#${tag} `)}
             </div>
+                 <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "4px" }}>
+                Direction: {post.trendDirection === "up"
+                  ? "▲ Up"
+                  : post.trendDirection === "down"
+                  ? "▼ Down"
+                  : "→ Stable"}
+              </div>
           </div>
           <div style={{ textAlign: "right", fontWeight: "600", color: "#5a3e2b" }}>
             Trend Score: {Number(post.predicted_trend_score || 0).toFixed(2)}
           </div>
+
         </TrendCard>
       ))}
     </TrendsGrid>
@@ -234,7 +242,15 @@ function MainPage() {
     const fetchPosts = async () => {
       try {
         const resTrends = await axios.get(`${BACKEND_URL}/predict_trends_full?limit=20`);
-        if (Array.isArray(resTrends.data)) setPosts(resTrends.data);
+        if (Array.isArray(resTrends.data)) {
+              const sortedData = resTrends.data.sort(
+          (a, b) => (b.predicted_trend_score || 0) - (a.predicted_trend_score || 0)
+        );
+        setPosts(sortedData);
+        console.log(sortedData);
+        }
+
+        console.log(resTrends.data)
       } catch (err) {
         console.error("Error fetching trends:", err);
       } finally {

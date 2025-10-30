@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import axios from "axios";
+import TrendPopularityOverTime from "./TrendPopularityOverTime";
 import {
   ResponsiveContainer,
   LineChart,
@@ -8,6 +10,9 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  BarChart,
+  Bar,
+  Legend,
 } from "recharts";
 
 const Container = styled.div`
@@ -54,11 +59,38 @@ const TrendTable = styled.table`
   }
 `;
 
-const TrendDetails = ({ trends }) => {
-  if (!trends || !trends.length) return <p>No trend data available</p>;
+const TrendDetails = () => {
+  const [trends, setTrends] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Prepare data for charts: one chart per trend
-  const chartData = trends.map((t) => ({
+  useEffect(() => {
+    const fetchTrends = async () => {
+      try {
+        const res = await axios.get("http://localhost:8000/predict_trends_full?limit=20");
+        if (Array.isArray(res.data)) {
+          // Sort by predicted_trend_score descending
+          const sorted = res.data.sort(
+            (a, b) => (b.predicted_trend_score || 0) - (a.predicted_trend_score || 0)
+          );
+          setTrends(sorted);
+        }
+        console.log("Fetched trends:", res.data);
+      } catch (err) {
+        console.error("Error fetching trends:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrends();
+  }, []);
+
+  if (loading) return <p>Loading trend data...</p>;
+  if (!trends.length) return <p>No trend data available</p>;
+
+const chartData = [...trends]
+  .sort((a, b) => a.trend_name.localeCompare(b.trend_name))
+  .map((t) => ({
     name: t.trend_name,
     actual: Number(t.predicted_trend_score.toFixed(3)),
     forecast: Number(t.forecasted_trend_score.toFixed(3)),
@@ -80,42 +112,45 @@ const TrendDetails = ({ trends }) => {
           </tr>
         </thead>
         <tbody>
-          {trends.map((t, idx) => (
-            <tr key={idx}>
+          {trends.map((t) => (
+            <tr key={t.trend_name}>
               <td>{t.trend_name}</td>
               <td>{t.predicted_trend_score.toFixed(3)}</td>
               <td>{t.forecasted_trend_score.toFixed(3)}</td>
               <td>{t.trendDirection}</td>
-
-
             </tr>
           ))}
         </tbody>
       </TrendTable>
 
+      {/* Line Chart: Actual vs Forecast */}
+   <ResponsiveContainer width="100%" height={300}>
+  <LineChart data={chartData} margin={{ top: 10, bottom: 10 }}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="name" />
+    <YAxis domain={[0, 1]} />
+    <Tooltip />
+    <Line type="monotone" dataKey="actual" stroke="#5a3e2b" strokeWidth={2} name="Predicted Score" />
+    <Line type="monotone" dataKey="forecast" stroke="#7d7d7d" strokeWidth={2} name="Forecasted Score" strokeDasharray="5 5" />
+  </LineChart>
+</ResponsiveContainer>
+
+      {/* Bar Chart: Compare Predicted vs Forecasted */}
+      <TrendHeader>
+        <TrendTitle>Predicted vs Forecast Comparison</TrendTitle>
+      </TrendHeader>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData} margin={{ top: 10, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis domain={[0, 1]} />
-          <Tooltip />
-          <Line
-            type="monotone"
-            dataKey="actual"
-            stroke="#5a3e2b"
-            strokeWidth={2}
-            name="Predicted Score"
-          />
-          <Line
-            type="monotone"
-            dataKey="forecast"
-            stroke="#7d7d7d"
-            strokeWidth={2}
-            name="Forecasted Score"
-            strokeDasharray="5 5"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+  <BarChart data={chartData} margin={{ top: 10, bottom: 10 }}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="name" />
+    <YAxis domain={[0, 1]} />
+    <Tooltip />
+    <Legend />
+    <Bar dataKey="actual" fill="#5a3e2b" name="Predicted Score" />
+    <Bar dataKey="forecast" fill="#7d7d7d" name="Forecasted Score" />
+  </BarChart>
+</ResponsiveContainer>
+         <TrendPopularityOverTime />
     </Container>
   );
 };

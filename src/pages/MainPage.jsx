@@ -2,9 +2,19 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import AISearchBar from "../components/AISearchBar";
 import AnimatedBackground from "../components/AnimatedBackground";
+import TrendDetails from "../components/TrendDetails";
+import ResponsibleAIPanel from "../components/ResponsibleAIPanel.jsx";
+import Gallery from "../components/Gallery";
+import AboutUs from "../components/AboutUs.jsx";
+import About from "../components/About.jsx";
+
+
 import axios from "axios";
 
-// Navbar & Section components
+// const BACKEND_URL = "https://fashion-backend-j02w.onrender.com";
+const BACKEND_URL = "http://localhost:8000";
+
+// Styled components (unchanged)
 const Section = styled.section`
   min-height: 100vh;
   display: flex;
@@ -21,6 +31,11 @@ const Section = styled.section`
 const SectionContent = styled.div`
   position: relative;
   z-index: 10;
+  max-width: ${(props) => (props.fullWidth ? "100%" : "800px")};
+  width: 100%;
+  margin: 0 auto;
+  padding: ${(props) => (props.fullWidth ? "0 20px" : "0")};
+  text-align: center;
 `;
 
 const Title = styled.h1`
@@ -114,7 +129,6 @@ const NavLink = styled.a`
   }
 `;
 
-// Trends Section Grid
 const TrendsWrapper = styled.div`
   width: 100%;
   padding: 60px 20px;
@@ -143,36 +157,21 @@ const TrendCard = styled.div`
   padding: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   background: white;
-  height: 200px; /* fixed height */
+  height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 `;
 
-// FashionFeed Component
-const FashionFeed = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+const FeatureContent = styled(SectionContent)`
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+`;
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await axios.get("http://localhost:8000/predict_trends?limit=20");
-        if (Array.isArray(res.data)) {
-          setPosts(res.data);
-        } else {
-          console.error("Backend returned non-array:", res.data);
-        }
-      } catch (err) {
-        console.error("Error fetching fashion posts:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPosts();
-  }, []);
-
-  if (loading) return <p>Loading fashion posts...</p>;
+const FashionFeed = ({ posts }) => {
   if (!posts.length) return <p>No trends available</p>;
 
   return (
@@ -183,39 +182,114 @@ const FashionFeed = () => {
             <h3 style={{ marginBottom: "4px" }}>{post.trend_name || "No Trend Name"}</h3>
             <p style={{ fontSize: "0.9rem", marginBottom: "8px" }}>{post.content || ""}</p>
             <div style={{ fontSize: "0.8rem", color: "#666" }}>
-              {(post.hashtags || []).map((tag, idx) => `#${tag} `)}
+              {(post.hashtags || []).map((tag) => `#${tag} `)}
             </div>
+                 <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "4px" }}>
+                Direction: {post.trendDirection === "up"
+                  ? "▲ Up"
+                  : post.trendDirection === "down"
+                  ? "▼ Down"
+                  : "→ Stable"}
+              </div>
           </div>
           <div style={{ textAlign: "right", fontWeight: "600", color: "#5a3e2b" }}>
             Trend Score: {Number(post.predicted_trend_score || 0).toFixed(2)}
           </div>
+
         </TrendCard>
       ))}
     </TrendsGrid>
   );
 };
 
-// MainPage
+// ===== Button Styling =====
+const modernButtonStyle = {
+  marginBottom: "20px",
+  padding: "12px 28px",
+  borderRadius: "12px",
+  cursor: "pointer",
+  border: "2px solid #111",
+  background: "#fff",
+  color: "#111",
+  fontFamily: "'Montserrat', sans-serif",
+  fontWeight: "600",
+  fontSize: "1rem",
+  transition: "all 0.3s ease",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+};
+
+const onButtonHover = (e) => {
+  e.currentTarget.style.background = "#111";
+  e.currentTarget.style.color = "#fff";
+  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.15)";
+};
+
+const onButtonLeave = (e) => {
+  e.currentTarget.style.background = "#fff";
+  e.currentTarget.style.color = "#111";
+  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+};
+
+// ===== MainPage Component =====
 function MainPage() {
   const [aiResponse, setAiResponse] = useState("");
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [aiAudit, setAiAudit] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const resTrends = await axios.get(`${BACKEND_URL}/predict_trends_full?limit=20`);
+        if (Array.isArray(resTrends.data)) {
+              const sortedData = resTrends.data.sort(
+          (a, b) => (b.predicted_trend_score || 0) - (a.predicted_trend_score || 0)
+        );
+        setPosts(sortedData);
+        console.log(sortedData);
+        }
+
+        console.log(resTrends.data)
+      } catch (err) {
+        console.error("Error fetching trends:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
+
+  const fetchAiAudit = async () => {
+    if (!posts || posts.length === 0) {
+      alert("No trend data to audit yet.");
+      return;
+    }
+
+    try {
+      setAuditLoading(true);
+      const resAudit = await axios.post(`${BACKEND_URL}/audit_trends`, { trends: posts });
+      if (Array.isArray(resAudit.data)) setAiAudit(resAudit.data);
+    } catch (err) {
+      console.error("Error running AI audit:", err);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
 
   const handleSearch = (query) => {
     setAiResponse("");
     try {
       const evtSource = new EventSource(
-        `http://localhost:8000/search?query=${encodeURIComponent(query)}`
+        `${BACKEND_URL}/search?query=${encodeURIComponent(query)}`
       );
 
       evtSource.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
-          if (data.delta) {
-            setAiResponse((prev) => prev + data.delta);
-          } else if (data.status === "Done") {
-            evtSource.close();
-          } else if (data.status) {
-            setAiResponse(data.status);
-          }
+          if (data.delta) setAiResponse((prev) => prev + data.delta);
+          else if (data.status === "Done") evtSource.close();
+          else if (data.status) setAiResponse(data.status);
         } catch (err) {
           console.error(err);
         }
@@ -235,9 +309,12 @@ function MainPage() {
     <div id="main-page">
       <Navbar>
         <NavLink href="#home">Home</NavLink>
-        <NavLink href="#features">Features</NavLink>
-        <NavLink href="#about">About</NavLink>
-        <NavLink href="#contact">Contact</NavLink>
+        <NavLink href="#fashion">Fashion Items</NavLink>
+        <NavLink href="#features">Insights</NavLink>
+        <NavLink href="#audit">Audit</NavLink>
+        <NavLink href="#details">Details</NavLink>
+          <NavLink href="#team">Team</NavLink>
+        <NavLink href="#gallery">Gallery</NavLink>
       </Navbar>
 
       <Section id="home" bg="#fff8f0">
@@ -250,42 +327,90 @@ function MainPage() {
         </SectionContent>
       </Section>
 
-      <TrendsWrapper>
+      <TrendsWrapper id="fashion">
         <TrendsHeader>
           <Title>Latest Fashion Trends</Title>
           <Subtitle>
             Explore emerging trends from social media with predicted trend scores.
           </Subtitle>
         </TrendsHeader>
-        <FashionFeed />
+
+        {loading ? (
+          <p>Loading fashion posts...</p>
+        ) : posts.length ? (
+          <FashionFeed posts={posts} />
+        ) : (
+          <p>No trends available</p>
+        )}
       </TrendsWrapper>
 
       <Section id="features" bg="#f0f4ff">
-        <SectionContent>
-          <Title>Features</Title>
+        <SectionContent fullWidth>
+          <Title>Trend Insights</Title>
           <Subtitle>
-            Discover trend analysis, personalized recommendations, and social media insights powered by AI.
+            Explore detailed analytics of emerging fashion trends, including scores, forecasts, and directions.
           </Subtitle>
+          <TrendDetails trends={posts} />
         </SectionContent>
       </Section>
 
-      <Section id="about" bg="#f7fff0">
+      <Section id="audit" bg="#f7fff0">
         <SectionContent>
+          <Title>Audit</Title>
+          <Subtitle>
+            Click below to run Responsible AI auditing on the current trend data.
+          </Subtitle>
+
+          {/* Modern button applied */}
+          <button
+            onClick={fetchAiAudit}
+            disabled={auditLoading}
+            style={modernButtonStyle}
+            onMouseEnter={onButtonHover}
+            onMouseLeave={onButtonLeave}
+          >
+            {auditLoading ? "Running Audit..." : "Run Responsible AI Audit"}
+          </button>
+
+          {aiAudit.length > 0 ? (
+            <ResponsibleAIPanel trends={aiAudit} />
+          ) : (
+            <p>No AI audit report available</p>
+          )}
+        </SectionContent>
+
+
+
+      </Section>
+         <Section id="details" bg="#f0f4ff">
+        <SectionContent fullWidth>
           <Title>About Us</Title>
           <Subtitle>
-            We’re building the future of fashion prediction with cutting-edge technology and creativity.
+            <strong>Fashion Trend Predictor</strong> is an AI-driven web application that helps
+            businesses in the fashion industry stay ahead of rapidly changing style trends.
+            By analyzing social media, e-commerce platforms, and influencer activity, our
+            system provides reliable forecasts that support data-driven design, marketing,
+            and stocking decisions.
           </Subtitle>
+          <AboutUs />
         </SectionContent>
       </Section>
 
-      <Section id="contact" bg="#fff0f5">
-        <SectionContent>
-          <Title>Contact</Title>
-          <Subtitle>
-            Reach out for collaborations, inquiries, or just to say hi!
-          </Subtitle>
-        </SectionContent>
-      </Section>
+             <Section id="team" bg="#f0f4ff">
+  <SectionContent fullWidth>
+    <Title>About Us</Title>
+    <Subtitle>
+      <strong>Team</strong>
+    </Subtitle>
+    <About />
+  </SectionContent>
+</Section>
+
+
+
+      <Gallery />
+
+
     </div>
   );
 }

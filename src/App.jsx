@@ -3,7 +3,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import AnimatedBackground from "./components/AnimatedBackground";
 import MainPage from "./pages/MainPage";
-import FashionFeed from "./components/FashionFeed.jsx"
+import FashionFeed from "./components/remove/FashionFeed.jsx"
 
 function App() {
   const handleSearch = (term) => {
